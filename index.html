@@ -5,51 +5,59 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
 <title>💣 بمب‌مِن — نسخهٔ فارسی</title>
 <style>
-  :root{--panel:#1a1f3a;--accent:#ffb703;--text:#f5f5f7;--muted:#9aa3b2;--touch-h:150px}
+  :root{--panel:#1a1f3a;--accent:#ffb703;--text:#f5f5f7;--muted:#9aa3b2}
   *{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;background:linear-gradient(180deg,#0b0f24,#121733);color:var(--text);
     font-family:Vazirmatn,Tahoma,system-ui,sans-serif;overflow:hidden}
   #app{position:relative;width:100vw;height:100vh;overflow:hidden}
-  canvas{position:absolute;top:0;left:0;width:100%;height:calc(100vh - var(--touch-h));
+
+  /* بوم: کل فضای موجود را پر می‌کند */
+  canvas{position:absolute;top:40px;left:0;width:100%;height:100%;
     background:#000;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6);
     image-rendering:pixelated;touch-action:none;display:block;pointer-events:auto}
 
-  /* HUD روی بوم */
-  #hud{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;
+  /* HUD: با فاصله ۲۰px از بالا */
+  #hud{position:absolute;top:5px;left:10px;right:10px;display:flex;justify-content:space-between;
     align-items:center;pointer-events:none;font-weight:700;font-size:13px;text-shadow:0 2px 6px #000;z-index:10}
-  #hud .chip{background:rgba(20,24,50,.75);padding:6px 10px;border-radius:10px;border:1px solid #2a305a}
+  #hud .chip{background:rgba(20,24,50,.75);padding:6px 10px;border-radius:10px;border:1px solid #2a305a;
+    white-space:nowrap; /* جلوگیری از شکستن خط */ 
+    display:inline-flex;align-items:center;gap:4px}
+  /* برای جلوگیری از جابجایی وقتی عدد تغییر می‌کند، حداقل عرض مشخص می‌کنیم */
+  #hud .chip:not(.clickable){min-width:48px;justify-content:center}
   #hud .left,#hud .right{display:flex;gap:6px;flex-wrap:wrap}
   .clickable{pointer-events:auto;cursor:pointer}
   .clickable:active{transform:scale(.95)}
 
-  /* کنترل‌های لمسی – همیشه در پایین صفحه */
-  #touch{position:fixed;bottom:0;left:0;right:0;height:var(--touch-h);
-    background:rgba(0,0,0,0.6);display:flex;justify-content:space-between;align-items:center;
-    padding:10px 16px;pointer-events:none;z-index:20;backdrop-filter:blur(4px);
-    border-top:1px solid #2a305a}
-  #touch .pad{display:grid;grid-template-columns:56px 56px 56px;grid-template-rows:56px 56px 56px;
-    gap:4px;pointer-events:auto;touch-action:none}
-  #touch .pad button{width:56px;height:56px;font-size:20px;padding:0;background:#1a1f3a;color:#fff;
-    border:1px solid #2a305a;border-radius:12px;pointer-events:auto;touch-action:none}
-  #touch .pad button:active{background:var(--accent);color:#111}
-  #touch .actions{display:flex;flex-direction:column;gap:6px;pointer-events:auto}
-  #touch .actions button{width:64px;height:64px;font-size:24px;border-radius:50%;
-    background:var(--accent);color:#111;border:none;pointer-events:auto;touch-action:none;
-    box-shadow:0 4px 8px rgba(0,0,0,0.5)}
-  #touch .actions button.alt{background:#2a305a;color:#fff;width:52px;height:52px;font-size:14px}
-  #touch .actions button:active{filter:brightness(0.8)}
-
-  /* اندازه‌ی کوچک‌تر برای موبایل‌های باریک */
-  @media (max-width:480px){
-    :root{--touch-h:130px}
-    #touch{padding:8px 10px}
-    #touch .pad{grid-template-columns:48px 48px 48px;grid-template-rows:48px 48px 48px;gap:3px}
-    #touch .pad button{width:48px;height:48px;font-size:16px}
-    #touch .actions button{width:54px;height:54px;font-size:20px}
-    #touch .actions button.alt{width:44px;height:44px;font-size:12px}
+  /* کنترل‌های لمسی – فقط در دستگاه‌های دارای لمس و صفحه‌های کوچک */
+  @media (hover: none) and (max-width: 900px) {
+    #touch{position:fixed;bottom:0;left:0;right:0;height:150px;
+      background:rgba(0,0,0,0.6);display:flex;justify-content:space-between;align-items:center;
+      padding:10px 16px;pointer-events:none;z-index:20;backdrop-filter:blur(4px);
+      border-top:1px solid #2a305a}
+    #touch .pad{display:grid;grid-template-columns:56px 56px 56px;grid-template-rows:56px 56px 56px;
+      gap:4px;pointer-events:auto;touch-action:none}
+    #touch .pad button{width:56px;height:56px;font-size:20px;padding:0;background:#1a1f3a;color:#fff;
+      border:1px solid #2a305a;border-radius:12px;pointer-events:auto;touch-action:none}
+    #touch .pad button:active{background:var(--accent);color:#111}
+    #touch .actions{display:flex;flex-direction:column;gap:6px;pointer-events:auto}
+    #touch .actions button{width:64px;height:64px;font-size:24px;border-radius:50%;
+      background:var(--accent);color:#111;border:none;pointer-events:auto;touch-action:none;
+      box-shadow:0 4px 8px rgba(0,0,0,0.5)}
+    #touch .actions button.alt{background:#2a305a;color:#fff;width:52px;height:52px;font-size:14px}
+    #touch .actions button:active{filter:brightness(0.8)}
+    /* در صفحه‌های خیلی کوچک، ارتفاع و اندازه‌ها را کم‌تر می‌کنیم */
+    @media (max-width:480px){
+      #touch{height:130px;padding:8px 10px}
+      #touch .pad{grid-template-columns:48px 48px 48px;grid-template-rows:48px 48px 48px;gap:3px}
+      #touch .pad button{width:48px;height:48px;font-size:16px}
+      #touch .actions button{width:54px;height:54px;font-size:20px}
+      #touch .actions button.alt{width:44px;height:44px;font-size:12px}
+    }
   }
+  /* در غیر این صورت کنترلرها مخفی‌اند (دسکتاپ) */
+  #touch{display:none}
 
-  /* صفحات منو و غیره (بدون تغییر) */
+  /* سایر استایل‌های صفحات (منو، راهنما، و...) بدون تغییر */
   .screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     background:radial-gradient(ellipse at center,rgba(10,14,36,.85),rgba(0,0,0,.95));z-index:30;padding:16px}
   .panel{background:var(--panel);border:1px solid #2a305a;border-radius:18px;padding:22px;
@@ -105,7 +113,7 @@
     </div>
   </div>
 
-  <!-- Touch Controls -->
+  <!-- Touch Controls (فقط در موبایل نمایش داده می‌شوند) -->
   <div id="touch">
     <div class="pad" dir="ltr">
       <div></div><button data-dir="up">▲</button><div></div>
@@ -119,7 +127,7 @@
     </div>
   </div>
 
-  <!-- صفحات (منو، راهنما، فروشگاه و ...) بدون تغییر -->
+  <!-- صفحات منو و غیره (بدون تغییر) -->
   <div id="menu" class="screen">
     <div class="panel">
       <h1>💣 بمب‌مِن</h1>
