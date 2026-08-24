@@ -11,51 +11,276 @@
     font-family:Vazirmatn,Tahoma,system-ui,sans-serif;overflow:hidden}
   #app{position:relative;width:100vw;height:100vh;overflow:hidden}
 
-  /* بوم: کل فضای موجود را پر می‌کند */
-  canvas{position:absolute;top:40px;left:0;width:100%;height:100%;
+  /* بوم: فضای زیر نوار HUD را دقیقاً پر می‌کند */
+  canvas{position:absolute;top:46px;left:0;width:100%;height:calc(100% - 46px);
     background:#000;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6);
     image-rendering:pixelated;touch-action:none;display:block;pointer-events:auto}
 
-  /* HUD: با فاصله ۲۰px از بالا */
-  #hud{position:absolute;top:5px;left:10px;right:10px;display:flex;justify-content:space-between;
-    align-items:center;pointer-events:none;font-weight:700;font-size:13px;text-shadow:0 2px 6px #000;z-index:10}
-  #hud .chip{background:rgba(20,24,50,.75);padding:6px 10px;border-radius:10px;border:1px solid #2a305a;
-    white-space:nowrap; /* جلوگیری از شکستن خط */ 
-    display:inline-flex;align-items:center;gap:4px}
-  /* برای جلوگیری از جابجایی وقتی عدد تغییر می‌کند، حداقل عرض مشخص می‌کنیم */
-  #hud .chip:not(.clickable){min-width:48px;justify-content:center}
-  #hud .left,#hud .right{display:flex;gap:6px;flex-wrap:wrap}
+  /* HUD: نوار ثابت بالای صفحه */
+  #hud{position:absolute;top:0;left:0;right:0;height:46px;display:grid;
+    grid-template-columns:1fr 1fr;align-items:center;gap:8px;padding:4px 10px;
+    background:rgba(11,15,36,.96);border-bottom:1px solid #2a305a;
+    pointer-events:none;font-weight:700;font-size:13px;text-shadow:0 2px 6px #000;z-index:25;
+    overflow:hidden}
+  #hud .chip{height:34px;background:rgba(20,24,50,.9);padding:6px 8px;border-radius:9px;
+    border:1px solid #2a305a;white-space:nowrap;display:inline-flex;
+    align-items:center;justify-content:center;gap:4px;overflow:hidden}
+  #hud .left,#hud .right{display:flex;gap:5px;flex-wrap:nowrap;min-width:0;height:100%;align-items:center}
+  #hud .left{justify-content:flex-start}
+  #hud .right{justify-content:flex-end}
+  /* عرض ثابت: تغییر اعداد/متن دیگر باعث هل دادن آیتم‌های کناری نمی‌شود */
+  #hudLives{width:58px;min-width:58px}
+  #hudShield{width:58px;min-width:58px}
+  #hudDash{width:58px;min-width:58px}
+  #hudCoins{width:62px;min-width:62px}
+  #hudStars{width:62px;min-width:62px}
+  #hudBombs{width:58px;min-width:58px}
+  #hudFire{width:58px;min-width:58px}
+  #hudSpeed{width:58px;min-width:58px}
+  #hudLevel{width:86px;min-width:86px}
+  #hudTime{width:70px;min-width:70px}
+  #btnMute,#btnPauseHud{width:42px;min-width:42px}
   .clickable{pointer-events:auto;cursor:pointer}
   .clickable:active{transform:scale(.95)}
 
-  /* کنترل‌های لمسی – فقط در دستگاه‌های دارای لمس و صفحه‌های کوچک */
-  @media (hover: none) and (max-width: 900px) {
-    #touch{position:fixed;bottom:0;left:0;right:0;height:150px;
-      background:rgba(0,0,0,0.6);display:flex;justify-content:space-between;align-items:center;
-      padding:10px 16px;pointer-events:none;z-index:20;backdrop-filter:blur(4px);
-      border-top:1px solid #2a305a}
-    #touch .pad{display:grid;grid-template-columns:56px 56px 56px;grid-template-rows:56px 56px 56px;
-      gap:4px;pointer-events:auto;touch-action:none}
-    #touch .pad button{width:56px;height:56px;font-size:20px;padding:0;background:#1a1f3a;color:#fff;
-      border:1px solid #2a305a;border-radius:12px;pointer-events:auto;touch-action:none}
-    #touch .pad button:active{background:var(--accent);color:#111}
-    #touch .actions{display:flex;flex-direction:column;gap:6px;pointer-events:auto}
-    #touch .actions button{width:64px;height:64px;font-size:24px;border-radius:50%;
-      background:var(--accent);color:#111;border:none;pointer-events:auto;touch-action:none;
-      box-shadow:0 4px 8px rgba(0,0,0,0.5)}
-    #touch .actions button.alt{background:#2a305a;color:#fff;width:52px;height:52px;font-size:14px}
-    #touch .actions button:active{filter:brightness(0.8)}
-    /* در صفحه‌های خیلی کوچک، ارتفاع و اندازه‌ها را کم‌تر می‌کنیم */
-    @media (max-width:480px){
-      #touch{height:130px;padding:8px 10px}
-      #touch .pad{grid-template-columns:48px 48px 48px;grid-template-rows:48px 48px 48px;gap:3px}
-      #touch .pad button{width:48px;height:48px;font-size:16px}
-      #touch .actions button{width:54px;height:54px;font-size:20px}
-      #touch .actions button.alt{width:44px;height:44px;font-size:12px}
+  /* در موبایل باریک، HUD فشرده می‌شود ولی عرض هر آیتم ثابت می‌ماند */
+  @media (max-width:700px){
+    #hud{height:42px;top:0;padding:3px 5px;gap:4px;font-size:11px}
+    canvas{top:42px;height:calc(100% - 42px)}
+    #hud .chip{height:32px;padding:5px 5px}
+    #hud .left,#hud .right{gap:3px}
+    #hudLives,#hudShield,#hudDash{width:48px;min-width:48px}
+    #hudCoins,#hudStars{width:52px;min-width:52px}
+    #hudBombs,#hudFire,#hudSpeed{width:48px;min-width:48px}
+    #hudLevel{width:70px;min-width:70px}
+    #hudTime{width:60px;min-width:60px}
+    #btnMute,#btnPauseHud{width:36px;min-width:36px}
+  }
+
+  /* کنترلرهای لمسی: همیشه پایین viewport و روی تمام عناصر */
+  #touch{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    height:150px;
+    display:none;
+    flex-direction:row;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    margin:0;
+    background:transparent;
+    border-top:none;
+    pointer-events:none;
+    z-index:9999;
+    backdrop-filter:blur(4px);
+    direction:ltr;
+    overflow:visible;
+  }
+
+  #touch.touch-enabled{
+    display:flex !important;
+  }
+
+  #touch .pad{
+    width:172px;
+    height:172px;
+    flex:0 0 172px;
+    display:grid;
+    grid-template-columns:56px 56px 56px;
+    grid-template-rows:56px 56px 56px;
+    gap:4px;
+    align-content:center;
+    justify-content:start;
+    pointer-events:auto;
+    touch-action:none;
+  }
+
+  #touch .pad button{
+    width:56px;
+    height:56px;
+    padding:0;
+    margin:0;
+    font-size:20px;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#1a1f3a;
+    color:#fff;
+    border:1px solid #2a305a;
+    border-radius:12px;
+    pointer-events:auto;
+    touch-action:none;
+  }
+
+  #touch .pad button:active{
+    background:var(--accent);
+    color:#111;
+  }
+
+  /* سه اکشن در چیدمان مورب: دسترسی انگشت‌ها طبیعی‌تر از ستون عمودی */
+  #touch .actions{
+    position:relative;
+    width:190px;
+    min-width:190px;
+    flex:0 0 190px;
+    height:118px;
+    pointer-events:none;
+    touch-action:none;
+  }
+
+  #touch .actions button{
+    position:absolute;
+    padding:0;
+    margin:0;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.12);
+    pointer-events:auto;
+    touch-action:none;
+    box-shadow:0 4px 10px rgba(0,0,0,.32);
+  }
+
+  /* بمب: پایینِ چپ / نقطه‌ی شروع */
+  #touch #btnBomb{
+    left:0;
+    bottom:0;
+    width:68px;
+    height:68px;
+    font-size:25px;
+    background:var(--accent);
+    color:#111;
+    transform:rotate(-10deg);
+  }
+
+  /* ریموت: کمی بالاتر و وسط */
+  #touch #btnRemote{
+    left:62px;
+    top:19px;
+    width:55px;
+    height:55px;
+    font-size:15px;
+    background:#2a305a;
+    color:#fff;
+    transform:rotate(-4deg);
+  }
+
+  /* دش: پایینِ راست */
+  #touch #btnDash{
+    right:0;
+    bottom:0;
+    width:62px;
+    height:62px;
+    font-size:21px;
+    background:#2f365f;
+    color:#fff;
+    transform:rotate(10deg);
+  }
+
+  #touch .actions button:active{
+    filter:brightness(.82);
+    transform:scale(.94) rotate(0deg);
+  }
+
+  /* آیکن‌های واضح و یکسان برای کنترلر و HUD */
+  .game-icon{
+    width:1.55em;
+    height:1.55em;
+    display:block;
+    flex:0 0 auto;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2.4;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  #touch .game-icon{
+    width:2em;
+    height:2em;
+  }
+  #hud .game-icon{
+    width:1.15em;
+    height:1.15em;
+  }
+  .icon-fill{fill:currentColor;stroke:none}
+
+  /* گوشی‌های کوچک */
+  @media (max-width:480px){
+    #touch{
+      height:130px;
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    }
+
+    #touch .pad{
+      width:147px;
+      height:147px;
+      flex-basis:147px;
+      grid-template-columns:48px 48px 48px;
+      grid-template-rows:48px 48px 48px;
+      gap:3px;
+    }
+
+    #touch .pad button{
+      width:48px;
+      height:48px;
+      font-size:16px;
+      border-radius:10px;
+    }
+
+    #touch .actions{
+      width:154px;
+      min-width:154px;
+      flex-basis:154px;
+      height:100px;
+    }
+
+    #touch #btnBomb{
+      width:56px;
+      height:56px;
+      font-size:21px;
+    }
+
+    #touch #btnRemote{
+      left:50px;
+      top:16px;
+      width:46px;
+      height:46px;
+      font-size:12px;
+    }
+
+    #touch #btnDash{
+      width:52px;
+      height:52px;
+      font-size:18px;
     }
   }
-  /* در غیر این صورت کنترلرها مخفی‌اند (دسکتاپ) */
+
+  /* چک‌باکس نمایش کنترلرها در منو */
+  .settings-row{display:flex;align-items:center;justify-content:space-between;
+    gap:12px;margin-top:12px;padding:10px 12px;background:#11163a;
+    border:1px solid #2a305a;border-radius:10px}
+  .settings-row label{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700}
+  .settings-row input[type="checkbox"]{width:19px;height:19px;accent-color:var(--accent);cursor:pointer}
+
+  /* نمایش کنترلرها روی همه دستگاه‌ها، بدون وابستگی به touch/hover */
   #touch{display:none}
+  #touch.touch-enabled{display:flex !important}
+
+  /* کنترلر فعال همیشه بالاتر از HUD، canvas و پنل‌های بازی قرار می‌گیرد */
+  #touch.touch-enabled{
+    position:fixed !important;
+    left:0 !important;
+    right:0 !important;
+    bottom:0 !important;
+    top:auto !important;
+    z-index:9999 !important;
+  }
 
   /* سایر استایل‌های صفحات (منو، راهنما، و...) بدون تغییر */
   .screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
@@ -98,7 +323,14 @@
     <div class="left">
       <div class="chip" id="hudLives">❤️ ۳</div>
       <div class="chip" id="hudShield">🛡️ ۰</div>
-      <div class="chip" id="hudDash" style="display:none">💨</div>
+      <div class="chip" id="hudDash" style="display:none" aria-label="دش" title="دش">
+        <svg class="game-icon" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M5 17h11"></path>
+          <path d="M13 9l8 8-8 8"></path>
+          <path d="M20 5l7 7"></path>
+          <path d="M20 27l7-7"></path>
+        </svg>
+      </div>
       <div class="chip" id="hudCoins">🪙 ۰</div>
       <div class="chip" id="hudStars">⭐ ۰</div>
     </div>
@@ -121,9 +353,32 @@
       <div></div><button data-dir="down">▼</button><div></div>
     </div>
     <div class="actions">
-      <button id="btnBomb">💣</button>
-      <button id="btnRemote" class="alt">🎛</button>
-      <button id="btnDash" class="alt">💨</button>
+      <button id="btnBomb" aria-label="بمب" title="بمب">
+        <svg class="game-icon" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M11 7c2.5-2 7.5-2 10 0"></path>
+          <path class="icon-fill" d="M9 9c-2.7 1.8-4.5 4.9-4.5 8.5C4.5 24.4 9.2 29 16 29s11.5-4.6 11.5-11.5c0-3.6-1.8-6.7-4.5-8.5C20.7 7.8 18.5 7 16 7s-4.7.8-7 2Z"></path>
+          <path d="M19 6c0-2.2 1.2-3.6 3.2-4.2"></path>
+          <path d="M23 3c1.2-.7 2.4-.5 3.4.5"></path>
+        </svg>
+      </button>
+      <button id="btnRemote" class="alt" aria-label="انفجار ریموت" title="انفجار ریموت">
+        <svg class="game-icon" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="7" y="5" width="18" height="22" rx="4"></rect>
+          <circle cx="12" cy="11" r="2.2"></circle>
+          <circle cx="20" cy="11" r="2.2"></circle>
+          <path d="M10 18h12"></path>
+          <path d="M12 22h2"></path>
+          <path d="M18 22h2"></path>
+        </svg>
+      </button>
+      <button id="btnDash" class="alt" aria-label="دش" title="دش">
+        <svg class="game-icon" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M5 17h11"></path>
+          <path d="M13 9l8 8-8 8"></path>
+          <path d="M20 5l7 7"></path>
+          <path d="M20 27l7-7"></path>
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -136,6 +391,13 @@
         <div class="stat"><b id="bestScore">۰</b><small>بهترین امتیاز</small></div>
         <div class="stat"><b id="bestLevel">۰</b><small>بهترین مرحله</small></div>
         <div class="stat"><b id="menuCoins">۰</b><small>سکه‌ها</small></div>
+      </div>
+      <div class="settings-row">
+        <label for="showTouchControls">
+          <input type="checkbox" id="showTouchControls">
+          <span>نمایش کنترلرهای لمسی</span>
+        </label>
+        <small id="touchSettingState" style="color:var(--muted)">خاموش</small>
       </div>
       <div class="row">
         <button id="btnStart">▶ شروع بازی</button>
@@ -220,6 +482,26 @@
   <div id="saveIndicator">سیو خودکار ✔</div>
 </div>
 
+<script>
+  (() => {
+    const touch = document.getElementById('touch');
+    const checkbox = document.getElementById('showTouchControls');
+    const state = document.getElementById('touchSettingState');
+    const KEY = 'showTouchControls';
+
+    function applyTouchSetting(show) {
+      checkbox.checked = show;
+      state.textContent = show ? 'روشن' : 'خاموش';
+      touch.classList.toggle('touch-enabled', show);
+      localStorage.setItem(KEY, show ? '1' : '0');
+    }
+
+    const saved = localStorage.getItem(KEY);
+    applyTouchSetting(saved === '1');
+
+    checkbox.addEventListener('change', () => applyTouchSetting(checkbox.checked));
+  })();
+</script>
 <script type="module" src="./js/main.js"></script>
 </body>
 </html>
