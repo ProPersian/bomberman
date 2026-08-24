@@ -26,31 +26,63 @@ class Input {
     window.addEventListener('blur', clear);
     document.addEventListener('visibilitychange', () => { if (document.hidden) clear(); });
 
-    // ------ دکمه‌های جهت‌یابی (Pad) با Pointer Events ------
-    document.querySelectorAll('#touch .pad button').forEach((btn) => {
-      const dir = btn.dataset.dir;
-      if (!dir) return;
-      // برای دکمه‌ی pause از رویداد جداگانه استفاده می‌کنیم
-      if (dir === 'pause') {
-        btn.addEventListener('pointerdown', (e) => {
-          e.preventDefault();
-          bus.emit('togglePause');
-        });
-        return;
-      }
-      const onDown = (e) => {
-        e.preventDefault();
-        if (this.pointers[dir]) this.pointers[dir].add(e.pointerId);
+    // ------ جوی‌استیک لمسی (جایگزین پد جهت‌دار قدیمی) ------
+    const joyBase = document.getElementById('joyBase');
+    const joyKnob = document.getElementById('joyKnob');
+    if (joyBase && joyKnob) {
+      let activePointerId = null;
+      const maxDist = 40;    // شعاع حرکت دسته (px)
+      const deadZone = 0.25; // زیر این نسبت از شعاع، جهتی فعال نمی‌شود
+
+      const clearDirs = () => { for (const k in this.pointers) this.pointers[k].delete('joy'); };
+      const setKnob = (dx, dy) => { joyKnob.style.transform = `translate(${dx}px, ${dy}px)`; };
+
+      const updateDirs = (dx, dy, dist) => {
+        clearDirs();
+        if (dist < maxDist * deadZone) return;
+        const deg = Math.atan2(dy, dx) * 180 / Math.PI;
+        if (deg > -157.5 && deg <= -112.5) { this.pointers.up.add('joy'); this.pointers.left.add('joy'); }
+        else if (deg > -112.5 && deg <= -67.5) { this.pointers.up.add('joy'); }
+        else if (deg > -67.5 && deg <= -22.5) { this.pointers.up.add('joy'); this.pointers.right.add('joy'); }
+        else if (deg > -22.5 && deg <= 22.5) { this.pointers.right.add('joy'); }
+        else if (deg > 22.5 && deg <= 67.5) { this.pointers.down.add('joy'); this.pointers.right.add('joy'); }
+        else if (deg > 67.5 && deg <= 112.5) { this.pointers.down.add('joy'); }
+        else if (deg > 112.5 && deg <= 157.5) { this.pointers.down.add('joy'); this.pointers.left.add('joy'); }
+        else { this.pointers.left.add('joy'); }
       };
+
+      const onMove = (e) => {
+        if (e.pointerId !== activePointerId) return;
+        e.preventDefault();
+        const rect = joyBase.getBoundingClientRect();
+        const dx = e.clientX - (rect.left + rect.width / 2);
+        const dy = e.clientY - (rect.top + rect.height / 2);
+        const rawDist = Math.hypot(dx, dy);
+        const clamped = Math.min(rawDist, maxDist);
+        const angle = Math.atan2(dy, dx);
+        setKnob(Math.cos(angle) * clamped, Math.sin(angle) * clamped);
+        updateDirs(dx, dy, rawDist);
+      };
+
       const onUp = (e) => {
-        e.preventDefault();
-        if (this.pointers[dir]) this.pointers[dir].delete(e.pointerId);
+        if (e.pointerId !== activePointerId) return;
+        activePointerId = null;
+        clearDirs();
+        setKnob(0, 0);
       };
-      btn.addEventListener('pointerdown', onDown);
-      btn.addEventListener('pointerup', onUp);
-      btn.addEventListener('pointercancel', onUp);
-      btn.addEventListener('pointerleave', onUp);
-    });
+
+      joyBase.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        if (activePointerId !== null) return; // فقط یک انگشت روی دسته
+        activePointerId = e.pointerId;
+        joyBase.setPointerCapture?.(e.pointerId);
+        onMove(e);
+      });
+      joyBase.addEventListener('pointermove', onMove);
+      joyBase.addEventListener('pointerup', onUp);
+      joyBase.addEventListener('pointercancel', onUp);
+      joyBase.addEventListener('pointerleave', onUp);
+    }
 
     // ------ دکمه‌های عملیات (Bomb, Remote, Dash) با Pointer Events ------
     const bombBtn = document.getElementById('btnBomb');
