@@ -2,7 +2,7 @@ class Input {
   constructor(bus) {
     this.bus = bus;
     this.keys = {};
-    // مجموعه pointerIdها برای هر جهت (اجازه‌ی چندلمسی)
+    // مجموعه pointerIdها برای هر جهت (اجازه‌ی چندلمسی، هم برای پد و هم جوی‌استیک)
     this.pointers = { up: new Set(), down: new Set(), left: new Set(), right: new Set() };
 
     // رویدادهای کیبورد (بدون تغییر)
@@ -26,7 +26,19 @@ class Input {
     window.addEventListener('blur', clear);
     document.addEventListener('visibilitychange', () => { if (document.hidden) clear(); });
 
-    // ------ جوی‌استیک لمسی (جایگزین پد جهت‌دار قدیمی) ------
+    // ------ پد جهت‌دار (دکمه‌ای) — بدون دکمه‌ی توقف وسط ------
+    document.querySelectorAll('#moveCtrlPad button[data-dir]').forEach((btn) => {
+      const dir = btn.dataset.dir;
+      if (!this.pointers[dir]) return;
+      const onDown = (e) => { e.preventDefault(); this.pointers[dir].add(e.pointerId); };
+      const onUp = (e) => { e.preventDefault(); this.pointers[dir].delete(e.pointerId); };
+      btn.addEventListener('pointerdown', onDown);
+      btn.addEventListener('pointerup', onUp);
+      btn.addEventListener('pointercancel', onUp);
+      btn.addEventListener('pointerleave', onUp);
+    });
+
+    // ------ جوی‌استیک لمسی ------
     const joyBase = document.getElementById('joyBase');
     const joyKnob = document.getElementById('joyKnob');
     if (joyBase && joyKnob) {

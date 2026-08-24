@@ -91,30 +91,76 @@
     display:flex !important;
   }
 
-#touch .joystick{
-  width:172px;
-  height:172px;
-  flex:0 0 172px;
-  position:relative;
-  border-radius:50%;
-  background:rgba(26,31,58,.55);
-  border:1px solid #2a305a;
-  pointer-events:auto;
-  touch-action:none;
-}
-#touch .joystick-knob{
-  position:absolute;
-  top:50%;
-  left:50%;
-  width:64px;
-  height:64px;
-  margin:-32px 0 0 -32px;
-  border-radius:50%;
-  background:#1a1f3a;
-  border:1px solid var(--accent);
-  pointer-events:none;
-  transition:transform .05s linear;
-}
+  /* بستهٔ مشترک کنترل حرکتی (جوی‌استیک یا پد) — کمی بالاتر از خط پایه */
+  #touch .moveCtrl{
+    width:172px;
+    height:172px;
+    flex:0 0 172px;
+    transform:translateY(-28px);
+    pointer-events:auto;
+    touch-action:none;
+  }
+
+  #touch .moveCtrl.hidden{
+    display:none;
+  }
+
+  #touch .joystick{
+    width:100%;
+    height:100%;
+    position:relative;
+    border-radius:50%;
+    background:rgba(26,31,58,.55);
+    border:1px solid #2a305a;
+  }
+
+  #touch .joystick-knob{
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:64px;
+    height:64px;
+    margin:-32px 0 0 -32px;
+    border-radius:50%;
+    background:#1a1f3a;
+    border:1px solid var(--accent);
+    pointer-events:none;
+    transition:transform .05s linear;
+  }
+
+  #touch .pad{
+    width:100%;
+    height:100%;
+    display:grid;
+    grid-template-columns:56px 56px 56px;
+    grid-template-rows:56px 56px 56px;
+    gap:4px;
+    align-content:center;
+    justify-content:start;
+  }
+
+  #touch .pad button{
+    width:56px;
+    height:56px;
+    padding:0;
+    margin:0;
+    font-size:20px;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#1a1f3a;
+    color:#fff;
+    border:1px solid #2a305a;
+    border-radius:12px;
+    pointer-events:auto;
+    touch-action:none;
+  }
+
+  #touch .pad button:active{
+    background:var(--accent);
+    color:#111;
+  }
 
   /* سه اکشن در چیدمان مورب: دسترسی انگشت‌ها طبیعی‌تر از ستون عمودی */
   #touch .actions{
@@ -249,10 +295,13 @@
       padding:8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
     }
 
-    #touch .pad{
+    #touch .moveCtrl{
       width:147px;
       height:147px;
       flex-basis:147px;
+    }
+
+    #touch .pad{
       grid-template-columns:48px 48px 48px;
       grid-template-rows:48px 48px 48px;
       gap:3px;
@@ -299,6 +348,9 @@
     border:1px solid #2a305a;border-radius:10px}
   .settings-row label{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700}
   .settings-row input[type="checkbox"]{width:19px;height:19px;accent-color:var(--accent);cursor:pointer}
+
+  /* دکمه‌های انتخاب حالت کنترل حرکتی */
+  .mode-btn.active{background:var(--accent);color:#111}
 
   /* نمایش کنترلرها روی همه دستگاه‌ها، بدون وابستگی به touch/hover */
   #touch{display:none}
@@ -379,9 +431,20 @@
 
   <!-- Touch Controls (فقط در موبایل نمایش داده می‌شوند) -->
   <div id="touch">
-   <div class="joystick" id="joyBase">
-  <div class="joystick-knob" id="joyKnob"></div>
-</div>
+    <!-- حالت جوی‌استیک -->
+    <div class="moveCtrl" id="moveCtrlJoystick">
+      <div class="joystick" id="joyBase">
+        <div class="joystick-knob" id="joyKnob"></div>
+      </div>
+    </div>
+
+    <!-- حالت پد جهت‌دار (بدون دکمه‌ی توقف وسط) -->
+    <div class="moveCtrl pad hidden" id="moveCtrlPad" dir="ltr">
+      <div></div><button data-dir="up">▲</button><div></div>
+      <button data-dir="left">◀</button><div></div><button data-dir="right">▶</button>
+      <div></div><button data-dir="down">▼</button><div></div>
+    </div>
+
     <div class="actions">
       <button id="btnBomb" aria-label="بمب" title="بمب">
         <svg class="game-icon" viewBox="0 0 32 32" aria-hidden="true">
@@ -428,6 +491,13 @@
           <span>نمایش کنترلرهای لمسی</span>
         </label>
         <small id="touchSettingState" style="color:var(--muted)">خاموش</small>
+      </div>
+      <div class="settings-row">
+        <span>نوع حرکت لمسی:</span>
+        <div class="row" style="margin-top:0">
+          <button class="ghost mode-btn" id="btnModeJoystick" data-mode="joystick">🕹️ جوی‌استیک</button>
+          <button class="ghost mode-btn" id="btnModeDpad" data-mode="dpad">🎮 دکمه‌ها</button>
+        </div>
       </div>
       <div class="row">
         <button id="btnStart">▶ شروع بازی</button>
@@ -530,8 +600,26 @@
     applyTouchSetting(saved === '1');
 
     checkbox.addEventListener('change', () => applyTouchSetting(checkbox.checked));
-  })();
 
+    // ------ انتخاب نوع کنترلر حرکتی (جوی‌استیک / دکمه‌ها) ------
+    const MODE_KEY = 'moveControlMode';
+    const joyWrap = document.getElementById('moveCtrlJoystick');
+    const padWrap = document.getElementById('moveCtrlPad');
+    const btnJoy = document.getElementById('btnModeJoystick');
+    const btnDpad = document.getElementById('btnModeDpad');
+
+    function applyMode(mode) {
+      joyWrap.classList.toggle('hidden', mode !== 'joystick');
+      padWrap.classList.toggle('hidden', mode !== 'dpad');
+      btnJoy.classList.toggle('active', mode === 'joystick');
+      btnDpad.classList.toggle('active', mode === 'dpad');
+      localStorage.setItem(MODE_KEY, mode);
+    }
+
+    applyMode(localStorage.getItem(MODE_KEY) || 'joystick');
+    btnJoy.addEventListener('click', () => applyMode('joystick'));
+    btnDpad.addEventListener('click', () => applyMode('dpad'));
+  })();
 </script>
 <script type="module" src="./js/main.js"></script>
 </body>
